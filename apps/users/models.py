@@ -5,6 +5,7 @@ USER_TYPE = (("1", "CUSTOMER"), ("2", "SELLER"), ("3", "ORGANIZER"))
 
 
 class CustomUserManager(BaseUserManager):
+
     def create_user(self, email, password=None, **extra_fields):
         if not email:
             raise ValueError("The Email field must be set")
@@ -27,9 +28,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
     deleted_at = models.DateTimeField(blank=True, null=True, editable=False)
+
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
     is_staff = models.BooleanField("Is Staff", default=False)
+
     user_type = models.CharField(default="1", choices=USER_TYPE, max_length=1)
     name = models.CharField("Nombres", max_length=200)
     last_name = models.CharField("Apellidos", max_length=50)

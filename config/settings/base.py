@@ -14,20 +14,35 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv  # Para cargar variables de entorno
 from datetime import timedelta
+import sys
+
+# AppConfig.default = False
+# Build paths inside the project like this: BASE_DIR / "subdir".
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Append the path of the "apps" folder to sys.path so that the apps can be imported correctly.
+APPS_DIR = os.path.abspath(os.path.join(BASE_DIR, os.pardir, "apps"))
+sys.path.append(str(APPS_DIR))
 
 # Cargar variables de entorno desde .env
-load_dotenv()
+load_dotenv(dotenv_path=BASE_DIR.parent.joinpath(".env"))
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+# Función para obtener variables de entorno
+def getenv(name: str, default=None):
+    if default is None and name not in os.environ:
+        raise ValueError(f"Missing environment variable: {name}")
+
+    return os.getenv(name, default)
+
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'reemplaza-esto-por-una-clave-segura')
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False  # Se sobreescribirá en los archivos de entorno
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 # Application definition
 INSTALLED_APPS = [
@@ -42,9 +57,10 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'rest_framework_simplejwt',  # JWT para autenticación
+    'drf_spectacular',
 
     # Aplicaciones locales
-    'apps.users',
+    'users.apps.UsersConfig',
 ]
 
 # Configuración de REST Framework y autenticación con JWT
@@ -55,6 +71,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 # Configuración de SimpleJWT
@@ -147,3 +164,15 @@ CORS_ALLOW_CREDENTIALS = True  # Permitir credenciales (cookies, tokens)
 AUTH_USER_MODEL = 'users.User'  # Solo si usas un modelo personalizado
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "FindUD BACKEND API",
+    "DESCRIPTION": "ENGINE BEHIND OUR SYSTEM",
+    "VERSION": "0.1.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "SCHEMA_PATH_PREFIX": "/api/v1/",
+    "SWAGGER_UI_SETTINGS": {
+        "deepLinking": True,
+        # "displayOperationId": True,
+    },
+}
