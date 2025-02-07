@@ -2,9 +2,10 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from rest_framework.authtoken.models import Token
+from rest_framework_simplejwt.tokens import RefreshToken
+
 from .models import User
 from .serializers import LoginUserSerializer, RecoverPasswordSerializer, UpdateProfileSerializer, UserSerializer
 
@@ -14,13 +15,12 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
 
     @extend_schema(description="Endpoint para el registro de un nuevo usuario", responses={201: UserSerializer})
-    @action(methods=["POST"], detail=False)
+    @action(methods=["POST"], detail=False, permission_classes=[AllowAny])
     def register(self, request):
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @extend_schema(
@@ -28,24 +28,27 @@ class UserViewSet(viewsets.ModelViewSet):
         request=LoginUserSerializer,
         responses={200: UserSerializer},
     )
-    @action(methods=["POST"], detail=False)
+    @action(methods=["POST"], detail=False, permission_classes=[AllowAny])
     def login(self, request):
         serializer = LoginUserSerializer(data=request.data)
-
         if serializer.is_valid():
             user = serializer.validated_data["user"]
-            token, _ = Token.objects.get_or_create(user=user)
-            serializer = UserSerializer(user)
-            return Response({"data": serializer.data, "token": token.key}, status=status.HTTP_200_OK)
-
+            refresh = RefreshToken.for_user(user)
+            user_serializer = UserSerializer(user)
+            return Response(
+                {
+                    "data": user_serializer.data,
+                    "access": str(refresh.access_token),
+                    "refresh": str(refresh),
+                },
+                status=status.HTTP_200_OK,
+            )
         return Response({"message": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
-    @extend_schema(description="Endpoint para el logout de un usuario", responses={200 | 500: None})
+    @extend_schema(description="Endpoint para el logout de un usuario", responses={200: None, 500: None})
     @action(methods=["POST"], detail=False, permission_classes=[IsAuthenticated])
     def logout(self, request):
         try:
-            # Delete the user's token to logout
-            request.user.auth_token.delete()
             return Response(status=status.HTTP_200_OK)
         except Exception:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -62,17 +65,15 @@ class UserViewSet(viewsets.ModelViewSet):
         if new_serializer.is_valid(raise_exception=True):
             new_serializer.save()
             return Response(status=status.HTTP_204_NO_CONTENT)
-
         return Response(new_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(methods=["PUT"], detail=False)
+    @action(methods=["PUT"], detail=False, permission_classes=[IsAuthenticated])
     def update_profile(self, request):
-        user = User.objects.get(id=request.data["id"])
+        user = request.user  # Usa el usuario autenticado en lugar de ID manual
         serializer = UpdateProfileSerializer(user, data=request.data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
-
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @extend_schema(
@@ -80,28 +81,25 @@ class UserViewSet(viewsets.ModelViewSet):
         parameters=[
             OpenApiParameter("email", OpenApiTypes.EMAIL, OpenApiParameter.QUERY),
         ],
-        responses={200 | 401: None}
+        responses={200: None, 404: None}
     )
     @action(methods=["GET"], detail=False)
     def query_email(self, request):
-        email = request.query_params["email"]
-        user = User.objects.filter(email=email).exists()
-        if user:
-            return Response(status=status.HTTP_200_OK)
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        email = request.query_params.get("email", "")
+        user_exists = User.objects.filter(email=email).exists()
+        return Response(status=status.HTTP_200_OK if user_exists else status.HTTP_404_NOT_FOUND)
 
     @extend_schema(
-        "Endpoint para consulta de un username",
+        description="Endpoint para consulta de un username",
         parameters=[
             OpenApiParameter("username", OpenApiTypes.STR, OpenApiParameter.QUERY),
         ],
-        responses={200 | 401: None}
+        responses={200: None, 404: None}
     )
     @action(methods=["GET"], detail=False)
     def query_username(self, request):
-        username = request.query_params["username"]
-        user = User.objects.filter(username=username).exists()
-        if user:
-            return Response(status=status.HTTP_200_OK)
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        username = request.query_params.get("username", "")
+        user_exists = User.objects.filter(username=username).exists()
+        return Response(status=status.HTTP_200_OK if user_exists else status.HTTP_404_NOT_FOUND)
+
 
