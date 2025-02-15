@@ -18,14 +18,14 @@ import sys
 
 # AppConfig.default = False
 # Build paths inside the project like this: BASE_DIR / "subdir".
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # Append the path of the "apps" folder to sys.path so that the apps can be imported correctly.
-APPS_DIR = os.path.abspath(os.path.join(BASE_DIR, os.pardir, "apps"))
-sys.path.append(str(APPS_DIR))
+APPS_DIR = os.path.join(BASE_DIR, "apps")
+sys.path.append(APPS_DIR)
 
 # Cargar variables de entorno desde .env
-load_dotenv(dotenv_path=BASE_DIR.parent.joinpath(".env"))
+load_dotenv(dotenv_path=BASE_DIR / ".env")
 
 
 # Función para obtener variables de entorno
@@ -37,7 +37,7 @@ def getenv(name: str, default=None):
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False  # Se sobreescribirá en los archivos de entorno
@@ -61,6 +61,7 @@ INSTALLED_APPS = [
 
     # Aplicaciones locales
     'users.apps.UsersConfig',
+    'stores.apps.StoresConfig',
 ]
 
 # Configuración de REST Framework y autenticación con JWT
@@ -116,11 +117,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
+DJANGO_SETTINGS_MODULE = os.getenv('DJANGO_SETTINGS_MODULE', 'config.settings.local')
+
 # Database (Se sobreescribirá en entornos específicos)
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('SUPABASE_DB_NAME'),
+        'USER': os.getenv('SUPABASE_DB_USER'),
+        'PASSWORD': os.getenv('SUPABASE_DB_PASSWORD'),
+        'HOST': os.getenv('SUPABASE_DB_HOST'),
+        'PORT': os.getenv('SUPABASE_DB_PORT', '5432'),
     }
 }
 
@@ -157,6 +164,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Configuración de CORS
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # Frontend en React local
+    "https://find-us-jet.vercel.app" # Frontend de vercel en producción
 ]
 CORS_ALLOW_CREDENTIALS = True  # Permitir credenciales (cookies, tokens)
 
