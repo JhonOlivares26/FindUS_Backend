@@ -56,7 +56,7 @@ staticfiles/
 identifier.sqlite
 
 # Virtual environments
-.env
+.env.production
 .venv/
 env/
 ENV/

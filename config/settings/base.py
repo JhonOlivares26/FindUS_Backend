@@ -24,8 +24,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 APPS_DIR = os.path.join(BASE_DIR, "apps")
 sys.path.append(APPS_DIR)
 
-# Cargar variables de entorno desde .env
-load_dotenv(dotenv_path=BASE_DIR / ".env")
+# Cargar variables de entorno desde el archivo correspondiente
+env_file = BASE_DIR / f".env.{os.getenv('DJANGO_ENV', 'local')}"
+load_dotenv(dotenv_path=env_file)
 
 
 # Función para obtener variables de entorno
@@ -46,6 +47,11 @@ ALLOWED_HOSTS = ["*"]
 
 # Application definition
 INSTALLED_APPS = [
+    # Aplicaciones locales
+    'users.apps.UsersConfig',
+    'stores.apps.StoresConfig',
+
+    # Aplicaciones de Django
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -58,10 +64,6 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework_simplejwt',  # JWT para autenticación
     'drf_spectacular',
-
-    # Aplicaciones locales
-    'users.apps.UsersConfig',
-    'stores.apps.StoresConfig',
 ]
 
 # Configuración de REST Framework y autenticación con JWT
@@ -123,11 +125,11 @@ DJANGO_SETTINGS_MODULE = os.getenv('DJANGO_SETTINGS_MODULE', 'config.settings.lo
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('SUPABASE_DB_NAME'),
-        'USER': os.getenv('SUPABASE_DB_USER'),
-        'PASSWORD': os.getenv('SUPABASE_DB_PASSWORD'),
-        'HOST': os.getenv('SUPABASE_DB_HOST'),
-        'PORT': os.getenv('SUPABASE_DB_PORT', '5432'),
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
 
