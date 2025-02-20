@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     # Aplicaciones locales
     'users.apps.UsersConfig',
     'stores.apps.StoresConfig',
+    'events.apps.EventsConfig',
 
     # Aplicaciones de Django
     'django.contrib.admin',
@@ -166,7 +167,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Configuración de CORS
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # Frontend en React local
-    "https://find-us-jet.vercel.app" # Frontend de vercel en producción
+    "https://find-us-jet.vercel.app"  # Frontend de vercel en producción
 ]
 CORS_ALLOW_CREDENTIALS = True  # Permitir credenciales (cookies, tokens)
 
