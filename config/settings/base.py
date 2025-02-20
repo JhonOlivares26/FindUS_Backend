@@ -18,14 +18,15 @@ import sys
 
 # AppConfig.default = False
 # Build paths inside the project like this: BASE_DIR / "subdir".
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # Append the path of the "apps" folder to sys.path so that the apps can be imported correctly.
-APPS_DIR = os.path.abspath(os.path.join(BASE_DIR, os.pardir, "apps"))
-sys.path.append(str(APPS_DIR))
+APPS_DIR = os.path.join(BASE_DIR, "apps")
+sys.path.append(APPS_DIR)
 
-# Cargar variables de entorno desde .env
-load_dotenv(dotenv_path=BASE_DIR.parent.joinpath(".env"))
+# Cargar variables de entorno desde el archivo correspondiente
+env_file = BASE_DIR / f".env.{os.getenv('DJANGO_ENV', 'local')}"
+load_dotenv(dotenv_path=env_file)
 
 
 # Función para obtener variables de entorno
@@ -36,16 +37,20 @@ def getenv(name: str, default=None):
     return os.getenv(name, default)
 
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+SECRET_KEY = os.getenv('SECRET_KEY')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False  # Se sobreescribirá en los archivos de entorno
+DEBUG = os.getenv("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost,.vercel.app').split(',')
 
 # Application definition
 INSTALLED_APPS = [
+    # Aplicaciones locales
+    'users.apps.UsersConfig',
+    'stores.apps.StoresConfig',
+    'events.apps.EventsConfig',
+
+    # Aplicaciones de Django
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -58,9 +63,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework_simplejwt',  # JWT para autenticación
     'drf_spectacular',
-
-    # Aplicaciones locales
-    'users.apps.UsersConfig',
+    "whitenoise.runserver_nostatic",
 ]
 
 # Configuración de REST Framework y autenticación con JWT
@@ -88,6 +91,7 @@ SIMPLE_JWT = {
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -114,13 +118,19 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'config.wsgi.application'
+WSGI_APPLICATION = 'config.wsgi.app'
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', os.getenv('DJANGO_SETTINGS_MODULE', 'config.settings.local'))
 
 # Database (Se sobreescribirá en entornos específicos)
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
 
@@ -148,8 +158,10 @@ USE_TZ = True
 
 # Configuración de archivos estáticos y de usuario
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / "static"]
+
+STATICFILES_DIRS = [] if not DEBUG else [BASE_DIR / "static"]  # Para archivos estáticos en desarrollo
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -157,6 +169,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Configuración de CORS
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # Frontend en React local
+    "https://find-us-jet.vercel.app"  # Frontend de vercel en producción
 ]
 CORS_ALLOW_CREDENTIALS = True  # Permitir credenciales (cookies, tokens)
 

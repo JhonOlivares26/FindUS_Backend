@@ -32,6 +32,8 @@ urlpatterns: List[str] = [
         "api/v1/",
         include([
             path("users/", include(("users.urls", "users"))),
+            path("stores/", include(("stores.urls", "stores"))),
+            path("events/", include(("events.urls", "events"))),
         ]),
     ),
 ]
