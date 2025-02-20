@@ -118,3 +118,4 @@ supabase/
 supabase/.temp/
 supabase/migrations/
 dump.sql
+/.env.local

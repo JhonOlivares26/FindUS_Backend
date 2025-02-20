@@ -37,13 +37,11 @@ def getenv(name: str, default=None):
     return os.getenv(name, default)
 
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('SECRET_KEY')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False  # Se sobreescribirá en los archivos de entorno
+DEBUG = os.getenv("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost,.vercel.app').split(',')
 
 # Application definition
 INSTALLED_APPS = [
@@ -65,6 +63,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework_simplejwt',  # JWT para autenticación
     'drf_spectacular',
+    "whitenoise.runserver_nostatic",
 ]
 
 # Configuración de REST Framework y autenticación con JWT
@@ -92,6 +91,7 @@ SIMPLE_JWT = {
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -118,9 +118,9 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'config.wsgi.application'
+WSGI_APPLICATION = 'config.wsgi.app'
 
-DJANGO_SETTINGS_MODULE = os.getenv('DJANGO_SETTINGS_MODULE', 'config.settings.local')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', os.getenv('DJANGO_SETTINGS_MODULE', 'config.settings.local'))
 
 # Database (Se sobreescribirá en entornos específicos)
 DATABASES = {
@@ -158,8 +158,10 @@ USE_TZ = True
 
 # Configuración de archivos estáticos y de usuario
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / "static"]
+
+STATICFILES_DIRS = [] if not DEBUG else [BASE_DIR / "static"]  # Para archivos estáticos en desarrollo
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
