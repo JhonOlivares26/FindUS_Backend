@@ -2,7 +2,7 @@ from .base import *
 
 DEBUG = True
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+ALLOWED_HOSTS = ['*']
 
 DATABASES = {
     'default': {
@@ -14,15 +14,3 @@ DATABASES = {
         'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
-
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # React local
-    "https://find-us-jet.vercel.app"
-]
-
-SECURE_BROWSER_XSS_FILTER = False
-SECURE_CONTENT_TYPE_NOSNIFF = False
-SECURE_SSL_REDIRECT = False
-SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_SECURE = False
-#X_FRAME_OPTIONS = 'DENY'
