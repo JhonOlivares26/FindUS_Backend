@@ -132,7 +132,8 @@ DATABASES = {
         "HOST": os.getenv("DB_HOST"),
         "PORT": os.getenv("DB_PORT", "5432"),
         "OPTIONS": {
-            "sslmode": "require",  # SSL para conexiones seguras
+            "sslmode": "verify-full",  # SSL para conexiones seguras
+            "sslrootcert": os.path.join(BASE_DIR, "prod-ca-2021.crt"),
         },
     }
 }
