@@ -120,3 +120,4 @@ supabase/migrations/
 dump.sql
 /.env.local
 .vercel
+.env*.local
