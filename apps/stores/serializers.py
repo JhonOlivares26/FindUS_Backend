@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Store
+from apps.stores.models import Store
 
 
 class StoreSerializer(serializers.ModelSerializer):
