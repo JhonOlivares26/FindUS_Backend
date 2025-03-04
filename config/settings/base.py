@@ -39,9 +39,9 @@ def getenv(name: str, default=None):
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 
-DEBUG = os.getenv("DEBUG", "False") == "True"
+DEBUG = os.getenv("DEBUG", "TRUE") == "True"
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost,.vercel.app').split(',')
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 INSTALLED_APPS = [
@@ -124,15 +124,20 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', os.getenv('DJANGO_SETTINGS_MODUL
 
 # Database (Se sobreescribirá en entornos específicos)
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT', '5432'),
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("DB_NAME", "postgres"),
+        "USER": os.getenv("DB_USER"),
+        "PASSWORD": os.getenv("DB_PASSWORD"),
+        "HOST": os.getenv("DB_HOST"),
+        "PORT": os.getenv("DB_PORT", "5432"),
+        "OPTIONS": {
+            "sslmode": "verify-full",  # SSL para conexiones seguras
+            "sslrootcert": os.path.join(BASE_DIR, "prod-ca-2021.crt"),
+        },
     }
 }
+
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -171,10 +176,13 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # Frontend en React local
     "https://find-us-jet.vercel.app"  # Frontend de vercel en producción
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True  # Permitir credenciales (cookies, tokens)
 
 # Modelo de usuario personalizado
 AUTH_USER_MODEL = 'users.User'  # Solo si usas un modelo personalizado
+
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
