@@ -3,7 +3,7 @@ name: CI Production Pipeline
 on:
   push:
     branches:
-      - production
+      - main
 
 jobs:
   test:
