@@ -108,5 +108,10 @@ class EventReview(BaseModel):
             models.UniqueConstraint(fields=["user", "event"], name="unique_event_review")
         ]
 
+    def clean(self):
+        super().clean()
+        if len(self.review_text) > 500:
+            raise ValidationError({"review_text": "El texto de la reseña no puede exceder los 500 caracteres."})
+
     def __str__(self):
         return f"{self.user.email} - {self.rating}"
