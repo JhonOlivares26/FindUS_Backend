@@ -6,8 +6,8 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import User
-from .serializers import LoginUserSerializer, RecoverPasswordSerializer, UpdateProfileSerializer, UserSerializer
+from apps.users.models import User
+from apps.users.serializers import LoginUserSerializer, RecoverPasswordSerializer, UpdateProfileSerializer, UserSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):

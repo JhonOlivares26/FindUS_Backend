@@ -28,3 +28,4 @@ typing_extensions==4.12.2
 tzdata==2025.1
 uritemplate==4.1.1
 whitenoise==6.9.0
+pytest~=8.3.5

@@ -2,8 +2,8 @@ from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from rest_framework import serializers
 
-from .models import User
-from .utils.gen_words import generate_random_username
+from apps.users.models import User
+from apps.users.utils.gen_words import generate_random_username
 
 
 class UserSerializer(serializers.ModelSerializer):
