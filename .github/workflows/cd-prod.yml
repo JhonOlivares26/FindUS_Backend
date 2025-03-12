@@ -56,15 +56,13 @@ jobs:
 
       - name: Reset database schema
         run: |
-          # Conectamos a la base de datos en localhost (la red de servicios de GitHub Actions permite acceder a Postgres vía localhost)
+          export PGPASSWORD=$DB_PASSWORD
           psql -h localhost -U $DB_USER -d $DB_NAME -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
-        env:
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_NAME: ${{ secrets.DB_NAME }}
 
       - name: Apply migrations
         run: |
           export DJANGO_SETTINGS_MODULE=config.settings.production
+          python manage.py makemigrations
           python manage.py migrate --noinput
 
       - name: Run tests
@@ -103,4 +101,4 @@ jobs:
       - name: Deploy to production
         run: |
           echo "Deploying to production..."
-          # Aquí agrega el comando o script para desplegar tu imagen en el proveedor que elijas (por ejemplo, AWS, GCP, etc.)
+          # Agrega aquí tu comando o script para desplegar tu imagen en tu proveedor de la nube.
