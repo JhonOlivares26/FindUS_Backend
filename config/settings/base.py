@@ -28,6 +28,8 @@ sys.path.append(APPS_DIR)
 env_file = BASE_DIR / f".env.{os.getenv('DJANGO_ENV', 'local')}"
 load_dotenv(dotenv_path=env_file)
 
+# Imprimir las variables de entorno para verificar
+print(f"Using environment file: {env_file}")
 
 # Función para obtener variables de entorno
 def getenv(name: str, default=None):
