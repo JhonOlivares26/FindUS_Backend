@@ -16,9 +16,9 @@ jobs:
       postgres:
         image: postgres:13
         env:
-          POSTGRES_USER: ${{ secrets.TEST_DB_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.TEST_DB_NAME }}
+          POSTGRES_USER: findus
+          POSTGRES_PASSWORD: findus123
+          POSTGRES_DB: findus_db
         ports:
           - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
@@ -39,14 +39,14 @@ jobs:
 
       - name: Set up environment variables
         env:
-          DB_HOST: ${{ secrets.TEST_DB_HOST }}
-          DB_NAME: ${{ secrets.TEST_DB_NAME }}
-          DB_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
-          DB_PORT: ${{ secrets.TEST_DB_PORT }}
-          DB_USER: ${{ secrets.TEST_DB_USER }}
-          DJANGO_ENV: ${{ secrets.TEST_DJANGO_ENV }}
-          DJANGO_SETTINGS_MODULE: ${{ secrets.TEST_DJANGO_SETTINGS_MODULE }}
-          SECRET_KEY: ${{ secrets.TEST_SECRET_KEY }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DJANGO_ENV: "local"
+          DJANGO_SETTINGS_MODULE: "config.settings.local"
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
         run: |
           echo "DB_HOST=$DB_HOST" >> $GITHUB_ENV
           echo "DB_NAME=$DB_NAME" >> $GITHUB_ENV
@@ -60,7 +60,6 @@ jobs:
       - name: Apply migrations
         run: |
           export DJANGO_SETTINGS_MODULE=config.settings.local
-          python manage.py makemigrations
           python manage.py migrate
 
       - name: Run tests
@@ -68,10 +67,9 @@ jobs:
           export DJANGO_SETTINGS_MODULE=config.settings.local
           pytest --cov=apps --cov-report=xml
 
-      - name: Check coverage
+      - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
-          fail_ci_if_error: true
-          coverage_command: pytest --cov=apps
-          coverage_variable: COVERAGE
-          coverage_target: 60%
+          token: ${{ secrets.CODECOV_TOKEN }}  # Usa el token de Codecov
+          file: coverage.xml  # Especifica el archivo de cobertura
+          fail_ci_if_error: true  # Falla el pipeline si hay un error
