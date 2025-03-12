@@ -16,9 +16,9 @@ jobs:
       postgres:
         image: postgres:13
         env:
-          POSTGRES_USER: findus
-          POSTGRES_PASSWORD: findus123
-          POSTGRES_DB: findus_db
+          POSTGRES_USER: ${{ secrets.TEST_DB_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.TEST_DB_NAME }}
         ports:
           - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
@@ -39,14 +39,14 @@ jobs:
 
       - name: Set up environment variables
         env:
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DJANGO_ENV: "local"
-          DJANGO_SETTINGS_MODULE: "config.settings.local"
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          DB_HOST: ${{ secrets.TEST_DB_HOST }}
+          DB_NAME: ${{ secrets.TEST_DB_NAME }}
+          DB_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
+          DB_PORT: ${{ secrets.TEST_DB_PORT }}
+          DB_USER: ${{ secrets.TEST_DB_USER }}
+          DJANGO_ENV: ${{ secrets.TEST_DJANGO_ENV }}
+          DJANGO_SETTINGS_MODULE: ${{ secrets.TEST_DJANGO_SETTINGS_MODULE }}
+          SECRET_KEY: ${{ secrets.TEST_SECRET_KEY }}
         run: |
           echo "DB_HOST=$DB_HOST" >> $GITHUB_ENV
           echo "DB_NAME=$DB_NAME" >> $GITHUB_ENV
@@ -60,6 +60,7 @@ jobs:
       - name: Apply migrations
         run: |
           export DJANGO_SETTINGS_MODULE=config.settings.local
+          python manage.py makemigrations
           python manage.py migrate
 
       - name: Run tests
