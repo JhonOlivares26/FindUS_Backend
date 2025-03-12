@@ -37,10 +37,29 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run tests
+      - name: Set up environment variables
         env:
-          DATABASE_URL: postgres://findus:findus123@localhost:5432/findus_db
+          DB_HOST: ${{ secrets.TEST_DB_HOST }}
+          DB_NAME: ${{ secrets.TEST_DB_NAME }}
+          DB_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
+          DB_PORT: ${{ secrets.TEST_DB_PORT }}
+          DB_USER: ${{ secrets.TEST_DB_USER }}
+          DJANGO_ENV: ${{ secrets.TEST_DJANGO_ENV }}
+          DJANGO_SETTINGS_MODULE: ${{ secrets.TEST_DJANGO_SETTINGS_MODULE }}
+          SECRET_KEY: ${{ secrets.TEST_SECRET_KEY }}
         run: |
+          echo "DB_HOST=$DB_HOST" >> $GITHUB_ENV
+          echo "DB_NAME=$DB_NAME" >> $GITHUB_ENVs
+          echo "DB_PASSWORD=$DB_PASSWORD" >> $GITHUB_ENV
+          echo "DB_PORT=$DB_PORT" >> $GITHUB_ENV
+          echo "DB_USER=$DB_USER" >> $GITHUB_ENV
+          echo "DJANGO_ENV=$DJANGO_ENV" >> $GITHUB_ENV
+          echo "DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE" >> $GITHUB_ENV
+          echo "SECRET_KEY=$SECRET_KEY" >> $GITHUB_ENV
+
+      - name: Run tests
+        run: |
+          export DJANGO_SETTINGS_MODULE=config.settings.local
           pytest --cov=apps --cov-report=xml
 
       - name: Check coverage

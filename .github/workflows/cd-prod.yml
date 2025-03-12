@@ -13,9 +13,9 @@ jobs:
       postgres:
         image: postgres:13
         env:
-          POSTGRES_USER: findus
-          POSTGRES_PASSWORD: findus123
-          POSTGRES_DB: findus_db
+          POSTGRES_USER: ${{ secrets.DB_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.DB_NAME }}
         ports:
           - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
@@ -34,10 +34,29 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run tests
+      - name: Set up environment variables
         env:
-          DATABASE_URL: postgres://findus:findus123@localhost:5432/findus_db
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DJANGO_ENV: ${{ secrets.DJANGO_ENV }}
+          DJANGO_SETTINGS_MODULE: ${{ secrets.DJANGO_SETTINGS_MODULE }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
         run: |
+          echo "DB_HOST=$DB_HOST" >> $GITHUB_ENV
+          echo "DB_NAME=$DB_NAME" >> $GITHUB_ENV
+          echo "DB_PASSWORD=$DB_PASSWORD" >> $GITHUB_ENV
+          echo "DB_PORT=$DB_PORT" >> $GITHUB_ENV
+          echo "DB_USER=$DB_USER" >> $GITHUB_ENV
+          echo "DJANGO_ENV=$DJANGO_ENV" >> $GITHUB_ENV
+          echo "DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE" >> $GITHUB_ENV
+          echo "SECRET_KEY=$SECRET_KEY" >> $GITHUB_ENV
+
+      - name: Run tests
+        run: |
+          export DJANGO_SETTINGS_MODULE=config.settings.production
           pytest --cov=apps --cov-report=xml
 
       - name: Check coverage
