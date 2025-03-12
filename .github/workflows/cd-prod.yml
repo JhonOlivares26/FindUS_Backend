@@ -54,18 +54,23 @@ jobs:
           echo "DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE" >> $GITHUB_ENV
           echo "SECRET_KEY=$SECRET_KEY" >> $GITHUB_ENV
 
+      - name: Apply migrations
+        run: |
+          export DJANGO_SETTINGS_MODULE=config.settings.production
+          python manage.py makemigrations
+          python manage.py migrate --noinput
+
       - name: Run tests
         run: |
           export DJANGO_SETTINGS_MODULE=config.settings.production
-          pytest --cov=apps --cov-report=xml
+          pytest --cov=apps --cov-report=xml --cov-fail-under=85
 
-      - name: Check coverage
+      - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: coverage.xml
           fail_ci_if_error: true
-          coverage_command: pytest --cov=apps
-          coverage_variable: COVERAGE
-          coverage_target: 85%
 
   deploy:
     needs: test
