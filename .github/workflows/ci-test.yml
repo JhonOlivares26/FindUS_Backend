@@ -57,6 +57,11 @@ jobs:
           echo "DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE" >> $GITHUB_ENV
           echo "SECRET_KEY=$SECRET_KEY" >> $GITHUB_ENV
 
+      - name: Apply migrations
+        run: |
+          export DJANGO_SETTINGS_MODULE=config.settings.local
+          python manage.py migrate
+
       - name: Run tests
         run: |
           export DJANGO_SETTINGS_MODULE=config.settings.local
