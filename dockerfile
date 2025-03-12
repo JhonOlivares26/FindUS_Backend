@@ -11,8 +11,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copia el resto del código del proyecto
 COPY . .
 
-# Expone el puerto 8000 (para Django)
+# Expone el puerto 8000
 EXPOSE 8000
 
-# Comando de inicio del contenedor
+# Comando de inicio
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "config.wsgi:application"]
