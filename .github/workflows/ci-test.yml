@@ -66,7 +66,7 @@ jobs:
       - name: Run tests
         run: |
           export DJANGO_SETTINGS_MODULE=config.settings.local
-          pytest --cov=apps --cov-report=xml
+          pytest --cov=apps --cov-report=xml --cov-fail-under=95
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
