@@ -34,6 +34,7 @@ urlpatterns: List[str] = [
             path("users/", include(("users.urls", "users"))),
             path("stores/", include(("stores.urls", "stores"))),
             path("events/", include(("events.urls", "events"))),
+            path("api/queue/", include(("azurequeue.urls", "Queue"))),
         ]),
     ),
 ]

@@ -1,4 +1,5 @@
 from .base import *
+import os
 
 DEBUG = True
 
@@ -14,3 +15,8 @@ DATABASES = {
         'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
+
+# Azure Service Bus Settings
+AZURE_SERVICE_BUS_CONNECTION_STR = os.getenv("AZURE_SERVICE_BUS_CONNECTION_STR")
+AZURE_QUEUE_NAME = os.getenv("AZURE_QUEUE_NAME")
+

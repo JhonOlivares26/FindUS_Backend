@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',
     'stores.apps.StoresConfig',
     'events.apps.EventsConfig',
+    'azurequeue.apps.AzurequeueConfig',
 
     # Aplicaciones de Django
     'django.contrib.admin',
