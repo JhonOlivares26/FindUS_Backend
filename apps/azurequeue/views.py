@@ -11,7 +11,6 @@ import json
 import os
 
 CONNECTION_STR = os.getenv('AZURE_SERVICE_BUS_CONNECTION_STRING')
-TOPIC_CACHE = "Cache"
 
 
 class SendMessageView(APIView):
@@ -24,6 +23,7 @@ class SendMessageView(APIView):
     )
     def post(self, request):
         serializer = SendMessageSerializer(data=request.data)
+
         if serializer.is_valid():
             message = serializer.validated_data["message"]
             bus = AzureServiceBus()
@@ -44,33 +44,57 @@ class ReceiveMessagesView(APIView):
 
 
 class ReprocessedMessageView(APIView):
+    """Endpoint para reprocesar un mensaje fallido y reenviarlo a la suscripción Cache del tópico main"""
+
+    @extend_schema(
+        summary="Reprocesar mensaje",
+        description="Recibe un mensaje con error, agrega objetos reales y lo reenvía a la suscripción Cache del tópico main"
+    )
     def post(self, request):
         try:
-            raw_message = request.data.get("message", "")
+            raw_message = request.data.get("message")
             if not raw_message:
-                return Response({"error": "No message provided"}, status=400)
+                return Response({"error": "No message provided"}, status=status.HTTP_400_BAD_REQUEST)
 
-            base_message = json.loads(raw_message)  # string a dict
+            # Convertir el string JSON a diccionario
+            base_message = json.loads(raw_message)
 
-            # Carga tus objetos de la BD
+            # Consultar objetos reales desde la BD
             events = serialize('json', Event.objects.all())
             categories = serialize('json', EventCategory.objects.all())
             reviews = serialize('json', EventReview.objects.all())
 
+            # Agregar datos al mensaje
             base_message["events_data"] = {
                 "events": json.loads(events),
                 "event_categories": json.loads(categories),
                 "event_reviews": json.loads(reviews),
             }
 
-            # Enviar a Azure -> tópico
+            # Forzar que el mensaje vaya a la suscripción 'Cache'
+            base_message["sendTo"] = "Cache"
+
+            # Enviar el mensaje al tópico 'main'
             with ServiceBusClient.from_connection_string(conn_str=CONNECTION_STR) as client:
-                sender = client.get_topic_sender(topic_name=TOPIC_CACHE)
+                sender = client.get_topic_sender(topic_name="main")
                 with sender:
-                    final_msg = ServiceBusMessage(json.dumps(base_message))
-                    sender.send_messages(final_msg)
+                    final_message = ServiceBusMessage(json.dumps(base_message))
 
-            return Response({"status": "Message processed and sent to Cache"}, status=200)
+                    # ✅ Establecer las propiedades de aplicación necesarias para el filtrado
+                    final_message.application_properties = {
+                        "sendTo": "Cache",
+                        "type": base_message.get("type", "event"),
+                        "failOn": base_message.get("failOn", ""),
+                        "error": base_message.get("error", "")
+                    }
 
+                    sender.send_messages(final_message)
+
+            return Response({"status": "Mensaje reprocesado y enviado al tópico main"}, status=status.HTTP_200_OK)
+
+        except json.JSONDecodeError:
+            return Response({"error": "Formato de mensaje inválido. Debe ser JSON válido."},
+                            status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return Response({"error": str(e)}, status=500)
+            return Response({"error": f"Ocurrió un error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
