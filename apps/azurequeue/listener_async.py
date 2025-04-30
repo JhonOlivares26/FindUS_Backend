@@ -1,25 +1,57 @@
 import asyncio
+import json
+import threading
+import datetime
 from azure.servicebus.aio import ServiceBusClient
+from azure.servicebus import ServiceBusClient, ServiceBusMessage
+from apps.azurequeue.azure_service_bus_sender import AzureServiceBusSender  # Crear este sender como tu compañero
+from apps.events.models import Event, EventCategory, EventReview  # Ajusta al nombre real de tus modelos
+from django.core.serializers import serialize
 
 
-class AzureQueueListenerAsync:
+class AzureQueueListenerAsync(threading.Thread):
     def __init__(self, connection_str, queue_name):
+        super().__init__()
         self.connection_str = connection_str
         self.queue_name = queue_name
-        self.running = True
 
-    async def listen(self):
-        """Escucha continuamente mensajes de la cola en modo asíncrono."""
-        async with ServiceBusClient.from_connection_string(self.connection_str) as client:
-            receiver = client.get_queue_receiver(self.queue_name)
-            async with receiver:
-                while self.running:
-                    messages = await receiver.receive_messages(max_message_count=5, max_wait_time=5)
-                    for msg in messages:
-                        print(f"📥 Mensaje recibido: {msg.body.decode('utf-8')}")
-                        await receiver.complete_message(msg)
+    def run(self):
+        servicebus_client = ServiceBusClient.from_connection_string(conn_str=self.connection_str, logging_enable=True)
+        with servicebus_client:
+            sender = servicebus_client.get_queue_sender(queue_name=self.queue_name)
+            with sender:
+                # Aquí es donde vas a consultar objetos reales
+                event = Event.objects.first()
+                category = EventCategory.objects.first()
+                review = EventReview.objects.first()
 
-    def start_listener(self):
-        """Inicia el listener en un hilo asíncrono."""
-        loop = asyncio.get_event_loop()
-        loop.create_task(self.listen())  # Ejecuta en background sin bloquear el loop principal
+                if event and category and review:
+                    message_body = {
+                        "type": "new_event",
+                        "event": {
+                            "id": event.id,
+                            "name": event.event_name,  # Ajusta a tus campos reales
+                            "description": event.event_description,
+                            "location": event.event_location,
+                            "date": event.event_date.isoformat(),  # Convertir datetime a string
+                        },
+                        "category": {
+                            "id": category.id,
+                            "name": category.name,
+                            "description": category.description,
+                        },
+                        "review": {
+                            "id": review.id,
+                            "rating": review.rating,
+                            "review_text": review.review_text,
+                        },
+                        "sendTo": "another_service",
+                        "failOn": None,
+                        "error": None
+                    }
+                    print(message_body)
+                    message = ServiceBusMessage(json.dumps(message_body))
+                    sender.send_messages(message)
+                    print("✅ Mensaje enviado con datos reales.")
+                else:
+                    print("⚠️ No se encontraron datos para enviar.")
