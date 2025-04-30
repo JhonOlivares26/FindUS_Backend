@@ -1,6 +1,5 @@
-from django.apps import AppConfig
-import asyncio
 import os
+from django.apps import AppConfig
 
 
 class AzurequeueConfig(AppConfig):
@@ -8,15 +7,12 @@ class AzurequeueConfig(AppConfig):
     name = 'apps.azurequeue'
 
     def ready(self):
-        """Lanza el listener de Azure Service Bus en segundo plano al iniciar Django."""
-        if os.environ.get('RUN_MAIN', None) != 'true':
-            from .listener_async import AzureQueueListenerAsync  # Import aquí para evitar errores en migraciones
-            from django.conf import settings
+        from .listener_async import AzureQueueListenerAsync  # <- importa aquí, no arriba
 
-            # Leer desde settings o .env
-            connection_str = settings.AZURE_SERVICE_BUS_CONNECTION_STR
-            queue_name = settings.AZURE_QUEUE_NAME
+        connection_str = os.getenv('AZURE_SERVICE_BUS_CONNECTION_STRING')
+        queue_name = os.getenv('AZURE_SERVICE_BUS_QUEUE_NAME')
 
-            listener = AzureQueueListenerAsync(connection_str, queue_name)
-            loop = asyncio.get_event_loop()
-            loop.create_task(listener.listen())  # Ejecuta el listener asíncrono
+        if connection_str and queue_name:
+            AzureQueueListenerAsync(connection_str, queue_name).start()
+        else:
+            print("⚠️  No se encontraron las variables de entorno para Azure Queue.")

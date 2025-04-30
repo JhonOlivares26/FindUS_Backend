@@ -33,20 +33,8 @@ class AzureServiceBus:
                         message_content = "".join(str(part) for part in msg.body)  # Convertir generador a string
                     else:
                         message_content = str(msg.body)  # Fallback
-
                     # 🛠 Eliminar prefijo b'' o comillas extrañas
                     message_content = message_content.strip("b'").strip('"')
-
-                    received_messages.append({"message": message_content})
-
-                    # NO eliminar el mensaje de la cola
-                    # receiver.complete_message(msg)  # No llamar esto para que los mensajes sigan en la cola
-
+                    # Asegurar que el diccionario cumple con Dict[str, str]
+                    received_messages.append({"message": str(message_content)})
         return received_messages
-
-
-
-
-
-
-

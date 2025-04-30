@@ -29,12 +29,12 @@ urlpatterns: List[str] = [
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
     path("api/docs/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
     path(
-        "api/v1/",
+        "api/v2/",
         include([
             path("users/", include(("users.urls", "users"))),
             path("stores/", include(("stores.urls", "stores"))),
             path("events/", include(("events.urls", "events"))),
-            path("api/queue/", include(("azurequeue.urls", "Queue"))),
+            path("queue/", include(("azurequeue.urls", "Queue"))),
         ]),
     ),
 ]
