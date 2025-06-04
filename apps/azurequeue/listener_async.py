@@ -4,8 +4,8 @@ import threading
 import datetime
 from azure.servicebus.aio import ServiceBusClient
 from azure.servicebus import ServiceBusClient, ServiceBusMessage
-from apps.azurequeue.azure_service_bus_sender import AzureServiceBusSender  # Crear este sender como tu compañero
-from apps.events.models import Event, EventCategory, EventReview  # Ajusta al nombre real de tus modelos
+from apps.azurequeue.azure_service_bus_sender import AzureServiceBusSender
+from apps.events.models import Event, EventCategory, EventReview
 from django.core.serializers import serialize
 
 
